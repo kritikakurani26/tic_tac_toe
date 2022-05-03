@@ -1,0 +1,19 @@
+.grid-container {
+  display: grid;
+  grid-template-columns: min-content min-content min-content;
+}
+
+.grid-item {
+  margin: 4px;
+  height: 50px;
+  width: 50px;
+}
+
+.new-game {
+  margin-top: 10px;
+}
+
+.result {
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
