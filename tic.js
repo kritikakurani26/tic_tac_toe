@@ -1,3 +1,5 @@
+import { Events } from "./events.js";
+
 let game = [];
 let currPlayer = "";
 let scoreX = 0;
@@ -12,7 +14,7 @@ var socket = io();
 document.addEventListener("DOMContentLoaded", function () {
   var isPlayerLocked = false;
   const player = document.getElementById("playing_as");
-  socket.on("start_game", (response) => {
+  socket.on(Events.START_GAME, (response) => {
     if (response !== "O" || response != "X") {
       isPlayerLocked = true;
     }
@@ -21,11 +23,11 @@ document.addEventListener("DOMContentLoaded", function () {
     if (response == "O") {
       myTurn();
       currPlayer = "O";
-      player.innerHTML += " O";
+      player.innerHTML = "You are playing as O";
     } else if (response == "X") {
       oppTurn();
       currPlayer = "X";
-      player.innerHTML += " X";
+      player.innerHTML = "You are playing as X";
     }
   });
 });
@@ -43,8 +45,6 @@ function initialize(isPlayerLocked) {
     }
     game.push(row);
   }
-
-  document.getElementById("result").innerText = "";
 }
 
 function createButton(row, col, isDisabled) {
@@ -74,18 +74,17 @@ function onButtonClick(row, col) {
   }
   box.textContent = currPlayer;
   game[row][col] = currPlayer;
-  socket.emit("play", { player: currPlayer, row: row, col: col });
+  socket.emit(Events.PLAY, { player: currPlayer, row: row, col: col });
   oppTurn();
 }
 
-socket.on("opp_play", (args) => {
-  console.log(args);
+socket.on(Events.OPP_PLAY, (args) => {
   const box = document.getElementById("b" + args["row"] + args["col"]);
   box.textContent = args["player"];
   myTurn();
 });
 
-socket.on("win", (player) => {
+socket.on(Events.WIN, (player) => {
   if (player == "O") {
     scoreO += 1;
   } else {

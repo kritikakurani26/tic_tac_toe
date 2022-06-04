@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <head>
   <title>Tic Tac Toe</title>
+  <script src="events.js" type="module"></script>
   <script src="tic.js" type="module"></script>
   <script src="/socket.io/socket.io.js"></script>
   <link rel="stylesheet" type="text/css" href="/index.css" />
@@ -11,7 +12,6 @@
   <div id="playing_as">You are playing as</div>
   <div id="instruction"></div>
   <div id="grid" class="grid-container"></div>
-  <div id="result" class="result"></div>
   <button type="button" onClick="initialize()" class="new-game">
     New Game
   </button>
