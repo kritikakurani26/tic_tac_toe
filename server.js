@@ -26,7 +26,7 @@ io.on("connection", (socket) => {
     const res = game.playTurn(args["player"], args["row"], args["col"]);
     socket.broadcast.emit("opp_play", args);
     if (res === 0) {
-      io.emit("win", "Player " + args["player"] + " won!");
+      io.emit("win", args["player"]);
     }
   });
 

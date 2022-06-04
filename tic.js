@@ -1,25 +1,32 @@
 let game = [];
-let currPlayer = "X";
+let currPlayer = "";
 let scoreX = 0;
 let scoreO = 0;
+
 const SIZE = 3;
+const INST_YOUR_TURN = "It's your turn to play!";
+const INST_OPP_TURN = "Waiting for opponent to play!";
 
 var socket = io();
 
 document.addEventListener("DOMContentLoaded", function () {
   var isPlayerLocked = false;
+  const player = document.getElementById("playing_as");
   socket.on("start_game", (response) => {
-    if (response == "O") {
-      currPlayer = "O";
-      // alert("You are playing as O");
-    } else if (response == "X") {
-      currPlayer = "X";
-      // alert("You are playing as X");
-    } else {
+    if (response !== "O" || response != "X") {
       isPlayerLocked = true;
     }
-    console.log(response, isPlayerLocked);
     initialize(isPlayerLocked);
+
+    if (response == "O") {
+      myTurn();
+      currPlayer = "O";
+      player.innerHTML += " O";
+    } else if (response == "X") {
+      oppTurn();
+      currPlayer = "X";
+      player.innerHTML += " X";
+    }
   });
 });
 
@@ -37,16 +44,14 @@ function initialize(isPlayerLocked) {
     game.push(row);
   }
 
-  // currPlayer = "X";
   document.getElementById("result").innerText = "";
 }
 
 function createButton(row, col, isDisabled) {
   const item = document.createElement("button");
   item.setAttribute("type", "button");
-  // item.setAttribute("onClick", "onButtonClick(" + row + "," + col + ")");
   item.onclick = function () {
-    onButtonClickV2(row, col);
+    onButtonClick(row, col);
   };
 
   item.setAttribute("class", "grid-item");
@@ -62,26 +67,6 @@ function createButton(row, col, isDisabled) {
   return newDiv;
 }
 
-function onButtonClickV2(row, col) {
-  const box = document.getElementById("b" + row + col);
-  if (box.textContent !== "") {
-    return;
-  }
-  box.textContent = currPlayer;
-  game[row][col] = currPlayer;
-  socket.emit("play", { player: currPlayer, row: row, col: col });
-}
-
-socket.on("opp_play", (args) => {
-  console.log(args);
-  const box = document.getElementById("b" + args["row"] + args["col"]);
-  box.textContent = args["player"];
-});
-
-socket.on("win", (args) => {
-  console.log(args);
-});
-
 function onButtonClick(row, col) {
   const box = document.getElementById("b" + row + col);
   if (box.textContent !== "") {
@@ -89,78 +74,41 @@ function onButtonClick(row, col) {
   }
   box.textContent = currPlayer;
   game[row][col] = currPlayer;
-
-  if (evaluate() === true) {
-    const result = document.getElementById("result");
-    result.innerText = "Player" + currPlayer + " wins!";
-
-    if (currPlayer == "X") {
-      scoreX += 1;
-    } else {
-      scoreO += 1;
-    }
-    document.getElementById("scores").innerText =
-      "Scores: PlayerX: " + scoreX + ", PlayerO: " + scoreO;
-
-    let buttons = document.querySelectorAll(".grid-item");
-    buttons.forEach((button) => button.setAttribute("disabled", "true"));
-
-    currPlayer = "X";
-    return;
-  }
-
-  currPlayer = currPlayer == "X" ? "O" : "X";
+  socket.emit("play", { player: currPlayer, row: row, col: col });
+  oppTurn();
 }
 
-// function evaluate() {
-//   for (let i = 0; i < SIZE; i++) {
-//     if (evalRow(i) === true) {
-//       return true;
-//     }
-//   }
-//   for (let i = 0; i < SIZE; i++) {
-//     if (evalCol(i) === true) {
-//       return true;
-//     }
-//   }
-//   return evalDiagonal1() || evalDiagonal2();
-// }
+socket.on("opp_play", (args) => {
+  console.log(args);
+  const box = document.getElementById("b" + args["row"] + args["col"]);
+  box.textContent = args["player"];
+  myTurn();
+});
 
-// function evalRow(rowNum) {
-//   for (let j = 0; j < SIZE - 1; j++) {
-//     if (game[rowNum][j] == null || game[rowNum][j] !== game[rowNum][j + 1]) {
-//       return false;
-//     }
-//   }
-//   return true;
-// }
+socket.on("win", (player) => {
+  if (player == "O") {
+    scoreO += 1;
+  } else {
+    scoreX += 1;
+  }
+  document.getElementById("scores").innerText =
+    "Scores: PlayerX: " + scoreX + ", PlayerO: " + scoreO;
+  alert("Player " + player + " won!");
+  disableAllButtons();
+});
 
-// function evalCol(colNum) {
-//   for (let i = 0; i < SIZE - 1; i++) {
-//     if (game[i][colNum] == null || game[i][colNum] !== game[i + 1][colNum]) {
-//       return false;
-//     }
-//   }
-//   return true;
-// }
+function myTurn() {
+  document.getElementById("instruction").innerText = INST_YOUR_TURN;
+  const elements = document.querySelectorAll('[id^="b"]');
+  elements.forEach((elem) => elem.removeAttribute("disabled"));
+}
 
-// function evalDiagonal1() {
-//   for (let i = 0; i < SIZE - 1; i++) {
-//     if (game[i][i] == null || game[i][i] !== game[i + 1][i + 1]) {
-//       return false;
-//     }
-//   }
-//   return true;
-// }
+function oppTurn() {
+  document.getElementById("instruction").innerText = INST_OPP_TURN;
+  disableAllButtons();
+}
 
-// function evalDiagonal2() {
-//   let j = SIZE;
-//   for (let i = 0; i < SIZE - 1; i++) {
-//     j -= 1;
-//     if (game[i][j] == null || game[i][j] !== game[i + 1][j - 1]) {
-//       return false;
-//     }
-//   }
-
-//   return true;
-// }
+function disableAllButtons() {
+  const elements = document.querySelectorAll('[id^="b"]');
+  elements.forEach((elem) => elem.setAttribute("disabled", true));
+}
